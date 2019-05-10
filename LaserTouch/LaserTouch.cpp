@@ -1,9 +1,10 @@
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+﻿#include "opencv2/core/core.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/opencv.hpp"
 
 
 using namespace cv;
+using namespace std;
 
 int main()
 {
@@ -28,11 +29,34 @@ int main()
 	cv::Mat frame;
 	cv::Mat thold;
 
+	SimpleBlobDetector::Params params;
+
+	params.minThreshold = 200;
+	params.maxThreshold = 211;
+
+	params.filterByArea = true;
+	params.minArea = 100;
+
+	params.filterByCircularity = false;
+	params.minCircularity = 0.1;
+
+	params.filterByConvexity = false;
+	params.minConvexity = 0.87;
+
+	params.filterByInertia = false;
+	params.minInertiaRatio = 0.01;
+
+	vector<KeyPoint> keypoints;
+
+	Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
+	
 //	cap.read(frame);
 //	imwrite("test.jpg", frame);
 	while (cap.read(frame))
 	{
-		cv::threshold(frame, thold, 128, 256, THRESH_BINARY);
+		cv::threshold(frame, thold, 128, 255, THRESH_BINARY_INV);
+		detector->detect(thold, keypoints);
+		drawKeypoints(frame, keypoints, frame, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 		cv::imshow("Camera", frame);
 		cv::imshow("Threshold", thold);
 
