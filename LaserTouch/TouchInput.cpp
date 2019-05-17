@@ -3,11 +3,8 @@
 
 
 
-TouchInput::TouchInput(int id, int x, int y)
+TouchInput::TouchInput(int id, int x, int y, int count)
 {
-	
-	// assume a maximum of 10 contacts and turn touch feedback off
-	InitializeTouchInjection(10, TOUCH_FEEDBACK_NONE);
 	// initialize the touch info structure
 	memset(&contact, 0, sizeof(POINTER_TOUCH_INFO));
 
@@ -27,10 +24,10 @@ TouchInput::TouchInput(int id, int x, int y)
 	contact.rcContact.left = x - 2;
 	contact.rcContact.right = x + 2;
 
-	InjectTouchInput(1, &contact);
+	//InjectTouchInput(count, &contact);
 }
 
-void TouchInput::UpdateInput(int id, int x, int y)
+void TouchInput::UpdateInject(int id, int x, int y, int count)
 {
 	contact.pointerInfo.ptPixelLocation.x = x;
 	contact.pointerInfo.ptPixelLocation.y = y;
@@ -42,12 +39,18 @@ void TouchInput::UpdateInput(int id, int x, int y)
 	contact.rcContact.left = x - 2;
 	contact.rcContact.right = x + 2;
 
-	InjectTouchInput(1, &contact);
+	//InjectTouchInput(count, &contact);
 }
 
-TouchInput::~TouchInput()
+void TouchInput::UpInject(int count)
 {
 	contact.pointerInfo.pointerFlags = POINTER_FLAG_UP;
 	// inject a touch up
-	InjectTouchInput(1, &contact);
+	//InjectTouchInput(count, &contact);
+}
+
+
+TouchInput::~TouchInput()
+{
+	
 }

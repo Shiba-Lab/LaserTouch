@@ -3,6 +3,7 @@
 #include "opencv2/core/core.hpp"
 #include "windows.h"
 
+#define MAX_COUNT 10
 
 class TouchInput
 {
@@ -11,9 +12,11 @@ public:
 	float x;
 	float y;
 	int id;
+	bool flag;
 
-	TouchInput(int id, int x, int y);
-	void UpdateInput(int id, int x, int y);
+	TouchInput(int id, int x, int y, int count);
+	void UpdateInject(int id, int x, int y, int count);
+	void UpInject(int count);
 	~TouchInput();
 };
 

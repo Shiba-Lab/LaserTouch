@@ -21,9 +21,15 @@
     <ClCompile Include="TouchInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TouchControler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TouchInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TouchControler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

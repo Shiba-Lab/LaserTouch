@@ -5,7 +5,6 @@
 #include "TouchInput.h"
 #include <string>
 
-
 using namespace cv;
 using namespace std;
 
@@ -50,15 +49,15 @@ int main()
 	params.filterByInertia = false;
 	params.minInertiaRatio = 0.01;
 
-	vector<KeyPoint> keypoints;
-	vector<KeyPoint> perviousKeypoints;
+	vector<KeyPoint> detectPoints;
+	int detectCount;
 	Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
 	
 	Point2f src_pt[] = {
-		Point2f(    0,   0 ),
 		Point2f( 1280,   0 ),
-		Point2f( 1280, 720 ),
-		Point2f(    0, 720 )};
+		Point2f(    0,   0 ),
+		Point2f(    0, 720 ),
+		Point2f( 1280, 720 )};
 	Point2f dst_pt[] = {
 		Point2f(    0,    0 ),
 		Point2f( 1920,    0 ),
@@ -66,9 +65,11 @@ int main()
 		Point2f(    0, 1080 )};
 	Mat h_matrix = getPerspectiveTransform(src_pt, dst_pt);
 
-	bool touched = false;
-
-	vector<TouchInput*> touchs;
+	vector<TouchInput*> touchPoints;
+	int touchCount;
+	bool touched[MAX_COUNT] = { 0 };
+	// assume a maximum of 10 contacts and turn touch feedback off
+	InitializeTouchInjection(MAX_COUNT, TOUCH_FEEDBACK_NONE);
 
 	//TickMeter tm;
 	//tm.reset();
@@ -76,54 +77,65 @@ int main()
 	//int frameCount = 0;
 	while (camera.read(frame))
 	{
-		printf("%d %d", frame.size().width, frame.size().height);
 		cv::cvtColor(frame, gray, COLOR_RGB2GRAY);
-		cv::threshold(gray, thold, 64, 255, THRESH_BINARY_INV);
-		detector->detect(thold, keypoints);
+		cv::threshold(gray, thold, 200, 255, THRESH_BINARY_INV);
+		detector->detect(thold, detectPoints);
 
-		int count = 0;
-		std::vector<KeyPoint>::const_iterator it = keypoints.begin(), end = keypoints.end();
-		//for (; it != end; ++it)
-		printf("%d ", (int)touchs.size());
-		if (it != end)
+		//std::vector<KeyPoint>::const_iterator it = keypoints.begin(), end = keypoints.end();
+		//for (; it != end & ; ++it)
+		int i = 0;
+		//printf("%d %d\n", (int)touchPoints.size(), (int)detectPoints.size());
+		touchCount = touchPoints.size();
+		detectCount = detectPoints.size();
+
+		for (i = 0; i < detectCount && i < MAX_COUNT; ++i)
 		{
-			//cv::putText(frame, std::to_string(count), it->pt, FONT_HERSHEY_TRIPLEX, 0.6, Scalar(0, 255, 0));
-			//++count;
-			printf("touch\n");
-
+			//射影変換
 			vector<Point2f> camera_pt(1);
-			camera_pt[0] = it->pt;
+			camera_pt[0] = detectPoints[i].pt;
 			vector<Point2f> display_pt(1);
 			perspectiveTransform(camera_pt, display_pt, h_matrix);
-
-			if (!touched)
+			
+			if (i < touchCount)
 			{
-				touched = true;
-
-				//Mat camera_pt = (Mat_<float>(1, 2) << (float)it->pt.y, (float)it->pt.x);
-				//Mat display_pt = Mat_<float>(1, 2);
-				
-				touchs.push_back(new TouchInput(0, (int)display_pt[0].x, (int)display_pt[0].y));
-				//touchs.push_back(new TouchInput(0, it->pt.x, it->pt.y));
+				//printf("update\n");
+				touchPoints[i]->UpdateInject(i, (int)display_pt[0].x, (int)display_pt[0].y, touchCount);  // ?
+				//touched[i] = true;
 			}
 			else
 			{
-				touchs[0]->UpdateInput(0, (int)display_pt[0].x, (int)display_pt[0].y);
+				printf("init %d\n", i);
+				touchPoints.push_back(new TouchInput(i, (int)display_pt[0].x, (int)display_pt[0].y, touchCount + 1));
+				touched[i] = true;
 			}
-		}
-		else
-		{
-			printf("untouch\n");
-			if (touched)
-			{
-				touched = false;
-				delete touchs[0];
-				touchs.erase(touchs.begin() + 0);
-			}
-			
 		}
 
-		drawKeypoints(frame, keypoints, frame, Scalar(0, 0, 255), DrawMatchesFlags::DEFAULT);
+		for (int i = 0; i < MAX_COUNT; ++i) printf("%d ", touched[i]); printf("\n");
+		
+		for (int j = touchCount - 1; j >= i; --j)
+		{
+			if (touched[j])
+			{
+				printf("Delete %d\n", j);
+				touched[j] = false;
+				touchPoints[j]->UpInject((int)touchPoints.size());
+				delete touchPoints[j];
+				touchPoints.erase(touchPoints.begin() + j);
+			}
+		}
+
+		
+		vector<POINTER_TOUCH_INFO> contacts;
+		for (i = 0; i < (int)touchPoints.size(); ++i)
+		{
+			contacts.push_back(touchPoints[i]->contact);
+		}
+		//printf("count %d %d\n", (int)contacts.size(), (int)touchPoints.size());
+		
+		InjectTouchInput(static_cast<UINT32>(contacts.size()), &contacts[0]);
+
+
+		drawKeypoints(frame, detectPoints, frame, Scalar(0, 0, 255), DrawMatchesFlags::DEFAULT);
 		
 
 		cv::imshow("Camera", frame);
