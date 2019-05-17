@@ -18,5 +18,13 @@
     <ClCompile Include="LaserTouch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TouchInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TouchInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

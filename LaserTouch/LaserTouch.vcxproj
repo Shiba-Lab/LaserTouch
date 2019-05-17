@@ -157,6 +157,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="LaserTouch.cpp" />
+    <ClCompile Include="TouchInput.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TouchInput.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
