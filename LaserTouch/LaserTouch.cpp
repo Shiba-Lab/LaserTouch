@@ -53,6 +53,19 @@ int main()
 	vector<KeyPoint> keypoints;
 	vector<KeyPoint> perviousKeypoints;
 	Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
+	
+	Point2f src_pt[] = {
+		Point2f(    0,   0 ),
+		Point2f( 1280,   0 ),
+		Point2f( 1280, 720 ),
+		Point2f(    0, 720 )};
+	Point2f dst_pt[] = {
+		Point2f(    0,    0 ),
+		Point2f( 1920,    0 ),
+		Point2f( 1920, 1080 ),
+		Point2f(    0, 1080 )};
+	Mat h_matrix = getPerspectiveTransform(src_pt, dst_pt);
+
 	bool touched = false;
 
 	vector<TouchInput*> touchs;
@@ -63,6 +76,7 @@ int main()
 	//int frameCount = 0;
 	while (camera.read(frame))
 	{
+		printf("%d %d", frame.size().width, frame.size().height);
 		cv::cvtColor(frame, gray, COLOR_RGB2GRAY);
 		cv::threshold(gray, thold, 64, 255, THRESH_BINARY_INV);
 		detector->detect(thold, keypoints);
@@ -76,14 +90,25 @@ int main()
 			//cv::putText(frame, std::to_string(count), it->pt, FONT_HERSHEY_TRIPLEX, 0.6, Scalar(0, 255, 0));
 			//++count;
 			printf("touch\n");
+
+			vector<Point2f> camera_pt(1);
+			camera_pt[0] = it->pt;
+			vector<Point2f> display_pt(1);
+			perspectiveTransform(camera_pt, display_pt, h_matrix);
+
 			if (!touched)
 			{
 				touched = true;
-				touchs.push_back(new TouchInput(0, it->pt.x, it->pt.y));
+
+				//Mat camera_pt = (Mat_<float>(1, 2) << (float)it->pt.y, (float)it->pt.x);
+				//Mat display_pt = Mat_<float>(1, 2);
+				
+				touchs.push_back(new TouchInput(0, (int)display_pt[0].x, (int)display_pt[0].y));
+				//touchs.push_back(new TouchInput(0, it->pt.x, it->pt.y));
 			}
 			else
 			{
-				touchs[0]->UpdateInput(0, it->pt.x, it->pt.y);
+				touchs[0]->UpdateInput(0, (int)display_pt[0].x, (int)display_pt[0].y);
 			}
 		}
 		else
