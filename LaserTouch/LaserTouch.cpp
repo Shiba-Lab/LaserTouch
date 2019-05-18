@@ -11,6 +11,7 @@ using namespace std;
 int main()
 {
 	cv::VideoCapture camera(0);
+	//cv::VideoCapture camera(0 + CAP_DSHOW);
 	if (!camera.isOpened())
 	{
 		printf("Cannot open the USB camera\n");
@@ -21,9 +22,8 @@ int main()
 	camera.set(CAP_PROP_FRAME_WIDTH, 1280);
 	camera.set(CAP_PROP_FRAME_HEIGHT, 720);
 	camera.set(CAP_PROP_FPS, 120.0);
-	camera.set(CAP_PROP_EXPOSURE, -11);
 	camera.set(CAP_PROP_CONTRAST, 20);
-	camera.set(CAP_PROP_GAIN, 0.0);
+	//camera.set(CAP_PROP_SETTINGS, 0);  // Use DirectShow property page to set exprosure 
 
 	printf("%f %f %f\n", camera.get(CAP_PROP_FRAME_WIDTH), camera.get(CAP_PROP_FRAME_HEIGHT), camera.get(CAP_PROP_FPS));
 	printf("%f %f\n", camera.get(CAP_PROP_EXPOSURE), camera.get(CAP_PROP_GAIN));
@@ -31,6 +31,7 @@ int main()
 	cv::Mat frame;
 	cv::Mat gray;
 	cv::Mat thold;
+	vector<Mat> channels;
 
 	SimpleBlobDetector::Params params;
 
@@ -80,8 +81,9 @@ int main()
 	//int frameCount = 0;
 	while (camera.read(frame))
 	{
-		cv::cvtColor(frame, gray, COLOR_RGB2GRAY);
-		cv::threshold(gray, thold, 200, 255, THRESH_BINARY_INV);
+		//cv::cvtColor(frame, gray, COLOR_RGB2GRAY);
+		cv::split(frame, channels);
+		cv::threshold(channels.at(0), thold, 200, 255, THRESH_BINARY_INV);
 		detector->detect(thold, detectPoints);
 
 		//std::vector<KeyPoint>::const_iterator it = keypoints.begin(), end = keypoints.end();
