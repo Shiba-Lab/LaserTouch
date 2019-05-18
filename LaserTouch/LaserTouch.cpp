@@ -49,6 +49,9 @@ int main()
 	params.filterByInertia = false;
 	params.minInertiaRatio = 0.01;
 
+	//params.filterByColor = true;
+	//params.blobColor = 255;
+
 	vector<KeyPoint> detectPoints;
 	int detectCount;
 	Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
