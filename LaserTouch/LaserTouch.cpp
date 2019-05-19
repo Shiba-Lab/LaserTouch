@@ -117,15 +117,15 @@ int main()
 			}
 			else
 			{
-				//if (0 <= display_pt[0].x && display_pt[0].x <= 1920 && 0 <= display_pt[0].y && display_pt[0].y <= 1080) {
+				if (0 <= display_pt[0].x && display_pt[0].x < 1920 && 0 <= display_pt[0].y && display_pt[0].y < 1080) {
 					printf("init %d\n", i);
 					touchPoints.push_back(new TouchInput(i, (int)display_pt[0].x, (int)display_pt[0].y, touchCount + 1));
 					touched[i] = true;
-				//}
+				}
 			}
 		}
 
-		// for (int i = 0; i < MAX_COUNT; ++i) printf("%d ", touched[i]); 
+		for (int i = 0; i < MAX_COUNT; ++i) printf("%d ", touched[i]); printf("\n");
 		
 		for (int j = touchCount - 1; j >= i; --j)
 		{
