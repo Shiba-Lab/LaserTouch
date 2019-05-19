@@ -60,10 +60,10 @@ int main()
 	Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
 	
 	Point2f src_pt[] = {
-		Point2f(  253, 452 ),
-		Point2f( 1021, 445 ),
-		Point2f(  916, 656 ),
-		Point2f(  347, 655 )};
+		Point2f(  229, 409 ),
+		Point2f( 1010, 423 ),
+		Point2f(  900, 638 ),
+		Point2f(  327, 622 )};
 	Point2f dst_pt[] = {
 		Point2f(  384, 216 ),
 		Point2f( 1536, 216 ),
@@ -95,7 +95,10 @@ int main()
 		//printf("%d %d\n", (int)touchPoints.size(), (int)detectPoints.size());
 		touchCount = touchPoints.size();
 		detectCount = detectPoints.size();
-
+		for (i = 0; i < MAX_COUNT; ++i)
+		{
+			touched[i] = false;
+		}
 		for (i = 0; i < detectCount && i < MAX_COUNT; ++i)
 		{
 			//射影変換
@@ -104,21 +107,21 @@ int main()
 			vector<Point2f> display_pt(1);
 			perspectiveTransform(camera_pt, display_pt, h_matrix);
 
-			printf("%f %f %f %f\n", detectPoints[i].pt.x, detectPoints[i].pt.y, display_pt[0].x, display_pt[0].y);
+			//printf("%f %f %f %f\n", detectPoints[i].pt.x, detectPoints[i].pt.y, display_pt[0].x, display_pt[0].y);
 			
 			if (i < touchCount)
 			{
 				//printf("update\n");
 				touchPoints[i]->UpdateInject(i, (int)display_pt[0].x, (int)display_pt[0].y, touchCount);  // ?
-				//touched[i] = true;
+				touched[i] = true;
 			}
 			else
 			{
-				if (0 <= display_pt[0].x && display_pt[0].x <= 1920 && 0 <= display_pt[0].y && display_pt[0].y <= 1080) {
+				//if (0 <= display_pt[0].x && display_pt[0].x <= 1920 && 0 <= display_pt[0].y && display_pt[0].y <= 1080) {
 					printf("init %d\n", i);
 					touchPoints.push_back(new TouchInput(i, (int)display_pt[0].x, (int)display_pt[0].y, touchCount + 1));
 					touched[i] = true;
-				}
+				//}
 			}
 		}
 
@@ -126,7 +129,7 @@ int main()
 		
 		for (int j = touchCount - 1; j >= i; --j)
 		{
-			if (touched[j])
+			if (!touched[j])
 			{
 				printf("Delete %d\n", j);
 				touched[j] = false;
