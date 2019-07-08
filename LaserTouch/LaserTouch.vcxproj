@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -82,8 +82,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>C:\Users\Qiu\SDK\opencv\static\install\x64\vc15\staticlib;$(LibraryPath)</LibraryPath>
-    <IncludePath>C:\Users\Qiu\SDK\opencv\static\install\include\opencv2;C:\Users\Qiu\SDK\opencv\static\install\include;$(IncludePath)</IncludePath>
+    <LibraryPath>.\3rdparty\opencv\static\install\x64\vc15\staticlib;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\3rdparty\opencv\static\install\include;.\3rdparty\opencv\static\install\include\opencv2;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
