@@ -1,7 +1,7 @@
-﻿#include "opencv2/core/core.hpp"
+﻿#include "opencv2/opencv.hpp"
+#include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/opencv.hpp"
 #include "TouchInput.h"
 #include <string>
 
@@ -10,84 +10,114 @@ using namespace std;
 
 int main()
 {
-	cv::VideoCapture camera(0);
-	//cv::VideoCapture camera(0 + CAP_DSHOW);
+
+	// Read property file
+	FileStorage fs("Property.json", FileStorage::READ);
+	if (!fs.isOpened())
+	{
+		cerr << "Failed to open property file" << endl;
+		return -1;
+	}
+	int width, height, FPS, aperture, contrast, threshold, minArea, maxArea;
+	float inertia;
+	fs["width"] >> width;
+	fs["height"] >> height;
+	fs["FPS"] >> FPS;
+	fs["aperture"] >> aperture;
+	fs["contrast"] >> contrast;
+	fs["threshold"] >> threshold;
+	fs["minArea"] >> minArea;
+	fs["maxArea"] >> maxArea;
+	fs["inertia"] >> inertia;
+
+	FileNode fn = fs["calibration"];
+	Point2f src_pt[4];
+	FileNodeIterator it = fn.begin(), it_end = fn.end();
+	for (int id = 0; it != it_end; ++it)
+	{
+		FileNode item = *it;
+		item >> src_pt[id];
+		++id;
+	}
+	Point2f dst_pt[] = {
+		Point2f(384, 216),
+		Point2f(1536, 216),
+		Point2f(1536, 864),
+		Point2f(384, 864) };
+	Mat h_matrix = getPerspectiveTransform(src_pt, dst_pt);
+
+	// Init camera
+	VideoCapture camera(0);
 	if (!camera.isOpened())
 	{
 		printf("Cannot open the USB camera\n");
 		return -1;
 	}
-	printf("Press Esc or Q to stop\n");
 	camera.set(CAP_PROP_FOURCC, 'MJPG');
-	camera.set(CAP_PROP_FRAME_WIDTH, 1280);
-	camera.set(CAP_PROP_FRAME_HEIGHT, 720);
-	camera.set(CAP_PROP_FPS, 120.0);
-	camera.set(CAP_PROP_CONTRAST, 20);
-	//camera.set(CAP_PROP_SETTINGS, 0);  // Use DirectShow property page to set exprosure 
+	camera.set(CAP_PROP_FRAME_WIDTH, width);
+	camera.set(CAP_PROP_FRAME_HEIGHT, height);
+	camera.set(CAP_PROP_FPS, FPS);
+	camera.set(CAP_PROP_APERTURE, aperture);
+	camera.set(CAP_PROP_CONTRAST, contrast);
 
-	printf("%f %f %f\n", camera.get(CAP_PROP_FRAME_WIDTH), camera.get(CAP_PROP_FRAME_HEIGHT), camera.get(CAP_PROP_FPS));
-	printf("%f %f\n", camera.get(CAP_PROP_EXPOSURE), camera.get(CAP_PROP_GAIN));
-
-	cv::Mat frame;
-	cv::Mat gray;
-	cv::Mat thold;
+	printf("Resolution: %.fx%.f  FPS: %.f\n", 
+		camera.get(CAP_PROP_FRAME_WIDTH), 
+		camera.get(CAP_PROP_FRAME_HEIGHT), 
+		camera.get(CAP_PROP_FPS));
+	Mat frame;
+	Mat gray;
 	vector<Mat> channels;
 
+
+	// Init blob detector
 	SimpleBlobDetector::Params params;
 
-	params.minThreshold = 127;
+	params.minThreshold = threshold;
 	params.maxThreshold = 255;
-	params.thresholdStep = 16;
+	params.thresholdStep = 30;						// Run threshold only one time
 
 	params.filterByArea = true;
-	params.minArea = 10;
-	params.maxArea = 10000;
-
-	params.filterByCircularity = false;
-	params.minCircularity = 0.1;
-
-	params.filterByConvexity = false;
-	params.minConvexity = 0.87;
+	params.minArea = minArea;
+	params.maxArea = maxArea;
 
 	params.filterByInertia = true;
-	params.minInertiaRatio = 0.1;
+	params.minInertiaRatio = inertia;
 
-	//params.filterByColor = true;
-	//params.blobColor = 255;
+	params.filterByCircularity = false;
+	//params.minCircularity = 0.1f;
+
+	params.filterByConvexity = false;
+	//params.minConvexity = 0.87f;
+	
+	params.filterByColor = true;
+	params.blobColor = 255;
 
 	vector<KeyPoint> detectPoints;
 	int detectCount;
 	Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
 	
-	Point2f src_pt[] = {
-		Point2f(  253, 452 ),
-		Point2f( 1021, 445 ),
-		Point2f(  916, 656 ),
-		Point2f(  347, 655 )};
-	Point2f dst_pt[] = {
-		Point2f(  384, 216 ),
-		Point2f( 1536, 216 ),
-		Point2f( 1536, 864 ),
-		Point2f(  384, 864 )};
-	Mat h_matrix = getPerspectiveTransform(src_pt, dst_pt);
 
+	// Init touch input
 	vector<TouchInput*> touchPoints;
 	int touchCount;
 	bool touched[MAX_COUNT] = { 0 };
 	// assume a maximum of 10 contacts and turn touch feedback off
 	InitializeTouchInjection(MAX_COUNT, TOUCH_FEEDBACK_NONE);
 
+
+	printf("Press Esc or Q to stop\n");
+	
+
+	// Init timer
 	//TickMeter tm;
 	//tm.reset();
 	//tm.start();
 	//int frameCount = 0;
 	while (camera.read(frame))
 	{
-		//cv::cvtColor(frame, gray, COLOR_RGB2GRAY);
-		cv::split(frame, channels);
-		//cv::threshold(channels.at(0), thold, 0, 255, THRESH_BINARY_INV);
-		cv::bitwise_not(channels.at(0), thold);
-		detector->detect(thold, detectPoints);
+		//cvtColor(frame, gray, COLOR_RGB2GRAY);
+		cv::split(frame, channels);												// Faster than RGB2GRAY when using monochrome camera
+		detector->detect(channels.at(0), detectPoints);
 
 		//std::vector<KeyPoint>::const_iterator it = keypoints.begin(), end = keypoints.end();
 		//for (; it != end & ; ++it)
@@ -98,7 +128,7 @@ int main()
 
 		for (i = 0; i < detectCount && i < MAX_COUNT; ++i)
 		{
-			//射影変換
+			// Keystone correction
 			vector<Point2f> camera_pt(1);
 			camera_pt[0] = detectPoints[i].pt;
 			vector<Point2f> display_pt(1);
@@ -122,7 +152,7 @@ int main()
 			}
 		}
 
-		// for (int i = 0; i < MAX_COUNT; ++i) printf("%d ", touched[i]); 
+		//for (int i = 0; i < MAX_COUNT; ++i) printf("%d ", touched[i]); 
 		
 		for (int j = touchCount - 1; j >= i; --j)
 		{
@@ -151,9 +181,8 @@ int main()
 		
 
 		cv::imshow("Camera", frame);
-		//cv::imshow("Threshold", thold);
 
-		const int key = cv::waitKey(1);
+		const int key = waitKey(1);
 		if (key == 'q' || key == 27)
 		{
 			printf("Stopped by user\n");
@@ -164,6 +193,6 @@ int main()
 	}
 	//tm.stop();
 	//cout << frameCount / tm.getTimeSec() << " FPS" << endl;
-	cv::destroyAllWindows();
+	destroyAllWindows();
 	return 0;
 }

@@ -1,0 +1,18 @@
+{
+    "width": 1280,
+    "height": 720,
+    "FPS": 120,
+    "aperture": 5000,
+    "contrast": 20,
+    "threshold": 127,
+    "minArea": 20,
+    "maxArea": 1000,
+    "inertia": 0.01,
+    "calibration": [
+        [ 384.0, 216.0 ],
+        [ 1536.0, 216.0 ],
+        [ 1536.0, 864.0 ],
+        [ 384.0, 864.0 ]
+    ],
+
+}
