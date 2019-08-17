@@ -178,7 +178,14 @@ int main()
 
 
 		drawKeypoints(frame, detectPoints, frame, Scalar(0, 0, 255), DrawMatchesFlags::DEFAULT);
-		
+		//int count = 0;
+		//vector<KeyPoint>::const_iterator it = detectPoints.begin(), end = detectPoints.end();
+		//while (it != end)
+		//{
+		//	putText(frame, to_string(count) + " " + to_string(it->pt.x) + " " + to_string(it->pt.y), it->pt, FONT_HERSHEY_PLAIN, 0.8, Scalar(255, 0, 255));
+		//	++count;
+		//	++it;
+		//}
 
 		cv::imshow("Camera", frame);
 
